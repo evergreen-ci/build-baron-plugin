@@ -1,7 +1,7 @@
 package buildbaron
 
 import (
-	"github.com/evergreen-ci/evergreen/model"
+	"github.com/evergreen-ci/evergreen/model/task"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -9,7 +9,7 @@ import (
 func TestDescriptionGeneration(t *testing.T) {
 	Convey("With a set of details, a valid description should be generated", t, func() {
 		_, err := getDescription(
-			&model.Task{
+			&task.Task{
 				DisplayName:  "My Task",
 				Id:           "mytaskid1",
 				BuildVariant: "osx-108",

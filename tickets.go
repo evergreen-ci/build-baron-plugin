@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/10gen-labs/slogger/v1"
 	"github.com/evergreen-ci/evergreen"
-	"github.com/evergreen-ci/evergreen/model"
+	"github.com/evergreen-ci/evergreen/model/task"
 	"github.com/evergreen-ci/evergreen/plugin"
 	"github.com/evergreen-ci/evergreen/thirdparty"
 	"net/http"
@@ -53,7 +53,7 @@ func (bbp *BuildBaronPlugin) fileTicket(w http.ResponseWriter, r *http.Request) 
 		plugin.WriteJSON(w, http.StatusUnauthorized, "must be logged in to file a ticket")
 		return
 	}
-	t, err := model.FindTask(input.TaskId)
+	t, err := task.FindOne(task.ById(input.TaskId))
 	if err != nil {
 		plugin.WriteJSON(w, http.StatusInternalServerError, err.Error())
 		return
@@ -130,7 +130,7 @@ func cleanTestName(path string) string {
 	return path
 }
 
-func historyURL(t *model.Task, testName string) string {
+func historyURL(t *task.Task, testName string) string {
 	return fmt.Sprintf("%v/task_history/%v/%v#%v=fail",
 		UIRoot, t.Project, t.DisplayName, testName)
 }
@@ -152,9 +152,9 @@ func getSummary(taskName string, tests []jiraTestFailure) string {
 	}
 }
 
-func getDescription(t *model.Task, userId string, tests []jiraTestFailure) (string, error) {
+func getDescription(t *task.Task, userId string, tests []jiraTestFailure) (string, error) {
 	args := struct {
-		Task   *model.Task
+		Task   *task.Task
 		UserId string
 		Tests  []jiraTestFailure
 	}{t, userId, tests}

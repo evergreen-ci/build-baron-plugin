@@ -6,7 +6,7 @@ import (
 	"github.com/evergreen-ci/evergreen"
 	"github.com/evergreen-ci/evergreen/db"
 	"github.com/evergreen-ci/evergreen/db/bsonutil"
-	"github.com/evergreen-ci/evergreen/model"
+	"github.com/evergreen-ci/evergreen/model/task"
 	"github.com/evergreen-ci/evergreen/plugin"
 	"github.com/evergreen-ci/evergreen/thirdparty"
 	"github.com/evergreen-ci/evergreen/util"
@@ -125,12 +125,12 @@ func (bbp *BuildBaronPlugin) GetPanelConfig() (*plugin.PanelConfig, error) {
 //  failures project
 func (bbp *BuildBaronPlugin) buildFailuresSearch(w http.ResponseWriter, r *http.Request) {
 	taskId := mux.Vars(r)["task_id"]
-	task, err := model.FindTask(taskId)
+	t, err := task.FindOne(task.ById(taskId))
 	if err != nil {
 		plugin.WriteJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	jql := taskToJQL(task)
+	jql := taskToJQL(t)
 
 	jiraHandler := thirdparty.NewJiraHandler(
 		bbp.opts.Host,
@@ -215,10 +215,10 @@ type jqlSearcher interface {
 // If there are any test results, then we only search by test file
 // name of all of the failed tests.
 // Otherwise we search by the task name.
-func taskToJQL(task *model.Task) string {
+func taskToJQL(t *task.Task) string {
 	var jqlParts []string
 	var jqlClause string
-	for _, testResult := range task.TestResults {
+	for _, testResult := range t.TestResults {
 		if testResult.Status == evergreen.TestFailedStatus {
 			fileParts := eitherSlash.Split(testResult.TestFile, -1)
 			jqlParts = append(jqlParts, fmt.Sprintf("text~\"%v\"", fileParts[len(fileParts)-1]))
@@ -227,7 +227,7 @@ func taskToJQL(task *model.Task) string {
 	if jqlParts != nil {
 		jqlClause = strings.Join(jqlParts, " or ")
 	} else {
-		jqlClause = fmt.Sprintf("text~\"%v\"", task.DisplayName)
+		jqlClause = fmt.Sprintf("text~\"%v\"", t.DisplayName)
 	}
 
 	return fmt.Sprintf(JQLBFQuery, jqlClause)
