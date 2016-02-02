@@ -15,7 +15,6 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"html/template"
-	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strings"
@@ -83,34 +82,16 @@ func (bbp *BuildBaronPlugin) Configure(conf map[string]interface{}) error {
 }
 
 func (bbp *BuildBaronPlugin) GetPanelConfig() (*plugin.PanelConfig, error) {
-	root := plugin.StaticWebRootFromSourceFile()
-	panelHTML, err := ioutil.ReadFile(root + "/partials/ng_include_task_build_baron.html")
-	if err != nil {
-		return nil, fmt.Errorf("Can't load panel html file, %v, %v",
-			root+"/partials/ng_include_task_build_baron.html", err)
-	}
-
-	includeJS, err := ioutil.ReadFile(root + "/partials/script_task_build_baron_js.html")
-	if err != nil {
-		return nil, fmt.Errorf("Can't load panel html file, %v, %v",
-			root+"/partials/script_task_build_baron_js.html", err)
-	}
-
-	includeCSS, err := ioutil.ReadFile(root +
-		"/partials/link_task_build_baron_css.html")
-	if err != nil {
-		return nil, fmt.Errorf("Can't load panel html file, %v, %v",
-			root+"/partials/link_task_build_baron_css.html", err)
-	}
-
 	return &plugin.PanelConfig{
-		StaticRoot: plugin.StaticWebRootFromSourceFile(),
 		Panels: []plugin.UIPanel{
 			{
 				Page:      plugin.TaskPage,
 				Position:  plugin.PageRight,
-				PanelHTML: template.HTML(panelHTML),
-				Includes:  []template.HTML{template.HTML(includeCSS), template.HTML(includeJS)},
+				PanelHTML: template.HTML(`<div ng-include="'/plugin/buildbaron/static/partials/task_build_baron.html'"></div>`),
+				Includes: []template.HTML{
+					template.HTML(`<link href="/plugin/buildbaron/static/css/task_build_baron.css" rel="stylesheet"/>`),
+					template.HTML(`<script type="text/javascript" src="/plugin/buildbaron/static/js/task_build_baron.js"></script>`),
+				},
 				DataFunc: func(context plugin.UIContext) (interface{}, error) {
 					return struct {
 						Enabled bool `json:"enabled"`
