@@ -28,7 +28,7 @@ func init() {
 const (
 	PluginName  = "buildbaron"
 	JIRAFailure = "Error searching jira for ticket"
-	JQLBFQuery  = "(project in (BF, SERVER, WT)) and ( %v ) order by resolution desc, status asc, resolutionDate desc, updatedDate desc"
+	JQLBFQuery  = "(project in (BF, SERVER, WT)) and ( %v )"
 
 	NotesCollection = "build_baron_notes"
 	msPerNS         = 1000 * 1000

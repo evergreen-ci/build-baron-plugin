@@ -48,7 +48,7 @@
   clear: both;
   overflow: auto;
 }
-.buildbaron-row-open, .buildbaron-row-blocked {
+.buildbaron-row-highlight{
   background-color: #f9e2e2;
 }
 .buildbaron-row-reopened{

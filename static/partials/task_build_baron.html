@@ -85,13 +85,18 @@
     <div ng-switch-when="nothing" class="buildbaron-results">No results found matching task or tests</div>
     <div ng-switch-when="success" class="buildbaron-results">
       <div class="buildbaron-issue" ng-repeat="issue in build_baron_results">
-        <div class="buildbaron-row buildbaron-row-[[issue.fields.status.name | lowercase]]">
+        <div class="buildbaron-row" ng-class="{'buildbaron-row-highlight': issue.statusKey==1}">
           <span class="buildbaron-issue-summary">
             <a ng-href="https://jira.mongodb.org/browse/[[issue.key]]">
               [[issue.key]]: [[issue.fields.summary]]
             </a>
           </span>
-          <span class="buildbaron-issue-status">[[issue.fields.status.name]]</span>
+          <span ng-show="issue.statusKey==2" class="buildbaron-issue-status">
+            [[issue.fields.status.name]]: [[issue.fields.resolution.name]]
+          </span>
+          <span ng-show="issue.statusKey==1" class="buildbaron-issue-status">
+            [[issue.fields.status.name]]
+          </span>
         </div>
         <div class="buildbaron-row">
           <div class="buildbaron-issue-detail buildbaron-issue-detail-left">
