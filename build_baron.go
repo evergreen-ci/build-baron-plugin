@@ -60,7 +60,7 @@ func (bbp *BuildBaronPlugin) GetUIHandler() http.Handler {
 		panic("build baron plugin missing configuration")
 	}
 	r := mux.NewRouter()
-	r.Path("/jira_bf_search/{task_id}").HandlerFunc(bbp.buildFailuresSearch)
+	r.Path("/jira_bf_search/{task_id}/{execution}").HandlerFunc(bbp.buildFailuresSearch)
 	r.Path("/note/{task_id}").Methods("GET").HandlerFunc(bbp.getNote)
 	r.Path("/note/{task_id}").Methods("PUT").HandlerFunc(bbp.saveNote)
 	r.Path("/file_ticket").Methods("POST").HandlerFunc(bbp.fileTicket)
@@ -106,13 +106,23 @@ func (bbp *BuildBaronPlugin) GetPanelConfig() (*plugin.PanelConfig, error) {
 //  failures project
 func (bbp *BuildBaronPlugin) buildFailuresSearch(w http.ResponseWriter, r *http.Request) {
 	taskId := mux.Vars(r)["task_id"]
-	t, err := task.FindOne(task.ById(taskId))
+	exec := mux.Vars(r)["execution"]
+	oldId := fmt.Sprintf("%v_%v", taskId, exec)
+	t, err := task.FindOneOld(task.ById(oldId))
 	if err != nil {
 		plugin.WriteJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	jql := taskToJQL(t)
+	// if the archived task was not found, we must be looking for the most recent exec
+	if t == nil {
+		t, err = task.FindOne(task.ById(taskId))
+		if err != nil {
+			plugin.WriteJSON(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
 
+	jql := taskToJQL(t)
 	jiraHandler := thirdparty.NewJiraHandler(
 		bbp.opts.Host,
 		bbp.opts.Username,

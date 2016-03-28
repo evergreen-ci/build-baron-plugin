@@ -10,7 +10,7 @@ mciModule.controller('TaskBuildBaronCtrl', function($scope, $http, $window) {
   };
 
   $scope.getBuildBaronResults = function() {
-    $http.get('/plugin/buildbaron/jira_bf_search/' + $scope.taskId ).
+    $http.get('/plugin/buildbaron/jira_bf_search/' + $scope.taskId + '/' + $scope.taskExec).
       success(function(data, status) {
         if (data && data.issues && data.issues.length > 0 ) {
           // we must sort with native js, since Angular does not
@@ -120,6 +120,7 @@ mciModule.controller('TaskBuildBaronCtrl', function($scope, $http, $window) {
   $scope.setTask = function(task) {
     $scope.task = task;
     $scope.taskId = task.id;
+    $scope.taskExec = task.execution;
     $scope.failed = _.filter(task.test_results, function(test){return test.status == 'fail'});
     // special case where we don't need user input when there is only one failure
     if ($scope.failed.length == 1) {
