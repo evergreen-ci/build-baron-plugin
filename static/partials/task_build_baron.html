@@ -72,9 +72,6 @@
         <span class="buildbaron-time" ng-show="editTime > 0">
           last edited on [[editTime | dateFromNanoseconds | convertDateToUserTimezone:userTz:"MMM D, YYYY h:mm:ss a"]]
         </span>
-        <confirm-on-exit confirm-on-exit="editing"
-                         confirm-message-window="Your changes to the note will be lost." >
-        </confirm-on-exit>
       </div>
     </div>
     <div class="buildbaron-results" ng-switch-when="loading">
