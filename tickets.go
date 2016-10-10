@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/10gen-labs/slogger/v1"
 	"github.com/evergreen-ci/evergreen"
+	"github.com/evergreen-ci/evergreen/model/host"
 	"github.com/evergreen-ci/evergreen/model/task"
 	"github.com/evergreen-ci/evergreen/plugin"
 	"github.com/evergreen-ci/evergreen/thirdparty"
@@ -21,7 +22,9 @@ const UIRoot = "https://evergreen.mongodb.com"
 const DescriptionTemplateString = `
 h2. [{{.Task.DisplayName}} failed on {{.Task.BuildVariant}}|` + UIRoot + `/task/{{.Task.Id}}]
 
+Host: [{{.Host.Host}}|` + UIRoot + `/host/{{.Host.Id}}]
 Project: [{{.Task.Project}}|` + UIRoot + `/waterfall/{{.Task.Project}}]
+
 {{range .Tests}}*{{.Name}}* - [Logs|{{.URL}}] | [History|{{.HistoryURL}}]
 
 {{end}}
@@ -54,6 +57,7 @@ func (bbp *BuildBaronPlugin) fileTicket(w http.ResponseWriter, r *http.Request) 
 		plugin.WriteJSON(w, http.StatusUnauthorized, "must be logged in to file a ticket")
 		return
 	}
+	// Find information about the task
 	t, err := task.FindOne(task.ById(input.TaskId))
 	if err != nil {
 		plugin.WriteJSON(w, http.StatusInternalServerError, err.Error())
@@ -61,6 +65,16 @@ func (bbp *BuildBaronPlugin) fileTicket(w http.ResponseWriter, r *http.Request) 
 	}
 	if t == nil {
 		plugin.WriteJSON(w, http.StatusNotFound, fmt.Sprintf("task not found for id %v", input.TaskId))
+		return
+	}
+	// Find the host the task ran on
+	h, err := host.FindOne(host.ById(t.HostId))
+	if err != nil {
+		plugin.WriteJSON(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if h == nil {
+		plugin.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("host not found for task id %v with host id: %v", input.TaskId, t.HostId))
 		return
 	}
 
@@ -88,7 +102,7 @@ func (bbp *BuildBaronPlugin) fileTicket(w http.ResponseWriter, r *http.Request) 
 	request["issuetype"] = map[string]string{"name": "Build Failure"}
 	request["assignee"] = map[string]string{"name": u.Id}
 	request["reporter"] = map[string]string{"name": u.Id}
-	request["description"], err = getDescription(t, u.Id, tests)
+	request["description"], err = getDescription(t, h, u.Id, tests)
 	if err != nil {
 		plugin.WriteJSON(
 			w, http.StatusBadRequest, fmt.Sprintf("error creating description: %v", err))
@@ -153,12 +167,13 @@ func getSummary(taskName string, tests []jiraTestFailure) string {
 	}
 }
 
-func getDescription(t *task.Task, userId string, tests []jiraTestFailure) (string, error) {
+func getDescription(t *task.Task, h *host.Host, userId string, tests []jiraTestFailure) (string, error) {
 	args := struct {
 		Task   *task.Task
+		Host   *host.Host
 		UserId string
 		Tests  []jiraTestFailure
-	}{t, userId, tests}
+	}{t, h, userId, tests}
 	buf := &bytes.Buffer{}
 	if err := DescriptionTemplate.Execute(buf, args); err != nil {
 		return "", err
