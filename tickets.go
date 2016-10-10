@@ -21,6 +21,7 @@ const UIRoot = "https://evergreen.mongodb.com"
 const DescriptionTemplateString = `
 h2. [{{.Task.DisplayName}} failed on {{.Task.BuildVariant}}|` + UIRoot + `/task/{{.Task.Id}}]
 
+Project: [{{.Task.Project}}|` + UIRoot + `/waterfall/{{.Task.Project}}]
 {{range .Tests}}*{{.Name}}* - [Logs|{{.URL}}] | [History|{{.HistoryURL}}]
 
 {{end}}
