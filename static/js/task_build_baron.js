@@ -11,12 +11,12 @@ mciModule.controller('TaskBuildBaronCtrl', function($scope, $http, $window) {
 
   $scope.getBuildBaronResults = function() {
     $http.get('/plugin/buildbaron/jira_bf_search/' + $scope.taskId + '/' + $scope.taskExec).
-      success(function(data, status) {
-        if (data && data.issues && data.issues.length > 0 ) {
+      success(function(issues, status) {
+        if (issues && issues.length > 0 ) {
           // we must sort with native js, since Angular does not
           // allow us to use conditionals when comparing two entries.
-          _.each(data.issues, function(i){i.statusKey = statusKeys[i.fields.status.name];});
-          data.issues.sort(function(a,b){
+          _.each(issues, function(i){i.statusKey = statusKeys[i.fields.status.name];});
+          issues.sort(function(a,b){
             // first, sort [Open, In Progress, Blocked] ahead of [Closed, Resolved];
             // if the statuses are in the same group, we move on to additional criteria.
             if (a.statusKey != b.statusKey) {
@@ -36,7 +36,7 @@ mciModule.controller('TaskBuildBaronCtrl', function($scope, $http, $window) {
             // finally, order by latest update time
             return b.fields.updated.localeCompare(a.fields.updated);
           });
-          $scope.build_baron_results = data.issues;
+          $scope.build_baron_results = issues;
           $scope.build_baron_status = "success";
         } else {
           $scope.build_baron_status = "nothing";

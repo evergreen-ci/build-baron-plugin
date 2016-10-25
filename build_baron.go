@@ -129,14 +129,14 @@ func (bbp *BuildBaronPlugin) buildFailuresSearch(w http.ResponseWriter, r *http.
 		bbp.opts.Password,
 	)
 
-	results, err := jiraHandler.JQLSearch(jql)
+	tickets, err := jiraHandler.JQLSearchAll(jql)
 	if err != nil {
 		message := fmt.Sprintf("%v: %v, %v", JIRAFailure, err, jql)
 		evergreen.Logger.Errorf(slogger.ERROR, message)
 		plugin.WriteJSON(w, http.StatusInternalServerError, message)
 		return
 	}
-	plugin.WriteJSON(w, http.StatusOK, results)
+	plugin.WriteJSON(w, http.StatusOK, tickets)
 }
 
 // getNote retrieves the latest note from the database.
