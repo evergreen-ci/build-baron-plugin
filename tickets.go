@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/10gen-labs/slogger/v1"
+	"net/http"
+	"strings"
+	"text/template"
+
 	"github.com/evergreen-ci/evergreen"
 	"github.com/evergreen-ci/evergreen/model/host"
 	"github.com/evergreen-ci/evergreen/model/task"
 	"github.com/evergreen-ci/evergreen/plugin"
 	"github.com/evergreen-ci/evergreen/thirdparty"
-	"net/http"
-	"strings"
-	"text/template"
+	"github.com/tychoish/grip/slogger"
 )
 
 const FailingTasksField = "customfield_12950"

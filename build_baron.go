@@ -2,7 +2,12 @@ package buildbaron
 
 import (
 	"fmt"
-	"github.com/10gen-labs/slogger/v1"
+	"html/template"
+	"net/http"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/evergreen-ci/evergreen"
 	"github.com/evergreen-ci/evergreen/db"
 	"github.com/evergreen-ci/evergreen/db/bsonutil"
@@ -12,13 +17,9 @@ import (
 	"github.com/evergreen-ci/evergreen/util"
 	"github.com/gorilla/mux"
 	"github.com/mitchellh/mapstructure"
+	"github.com/tychoish/grip/slogger"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"html/template"
-	"net/http"
-	"regexp"
-	"strings"
-	"time"
 )
 
 func init() {
