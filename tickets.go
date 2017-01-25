@@ -97,7 +97,7 @@ func (bbp *BuildBaronPlugin) fileTicket(w http.ResponseWriter, r *http.Request) 
 
 	//lay out the JIRA API request
 	request := map[string]interface{}{}
-	request["project"] = map[string]string{"key": "BF"}
+	request["project"] = map[string]string{"key": bbp.opts.Projects[t.Project].TicketCreateProject}
 	request["summary"] = getSummary(t.DisplayName, tests)
 	request[FailingTasksField] = []string{t.DisplayName}
 	request["issuetype"] = map[string]string{"name": "Build Failure"}

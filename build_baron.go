@@ -29,7 +29,7 @@ func init() {
 const (
 	PluginName  = "buildbaron"
 	JIRAFailure = "Error searching jira for ticket"
-	JQLBFQuery  = "(project in (BF, SERVER, WT)) and ( %v )"
+	JQLBFQuery  = "(project in (%v)) and ( %v )"
 
 	NotesCollection = "build_baron_notes"
 	msPerNS         = 1000 * 1000
@@ -40,7 +40,12 @@ type bbPluginOptions struct {
 	Host     string
 	Username string
 	Password string
-	Projects []string
+	Projects map[string]bbProject
+}
+
+type bbProject struct {
+	TicketCreateProject  string   `mapstructure:"ticket_create_project"`
+	TicketSearchProjects []string `mapstructure:"ticket_search_projects"`
 }
 
 type BuildBaronPlugin struct {
@@ -71,12 +76,24 @@ func (bbp *BuildBaronPlugin) GetUIHandler() http.Handler {
 func (bbp *BuildBaronPlugin) Configure(conf map[string]interface{}) error {
 	// pull out options needed from config file (JIRA authentication info, and list of projects)
 	bbpOptions := &bbPluginOptions{}
+
 	err := mapstructure.Decode(conf, bbpOptions)
 	if err != nil {
 		return err
 	}
 	if bbpOptions.Host == "" || bbpOptions.Username == "" || bbpOptions.Password == "" {
 		return fmt.Errorf("Host, username, and password in config must not be blank")
+	}
+	if len(bbpOptions.Projects) == 0 {
+		return fmt.Errorf("Must specify at least 1 Evergreen project")
+	}
+	for _, proj := range bbpOptions.Projects {
+		if proj.TicketCreateProject == "" {
+			return fmt.Errorf("ticket_create_project cannot be blank")
+		}
+		if len(proj.TicketSearchProjects) == 0 {
+			return fmt.Errorf("ticket_search_projects cannot be empty")
+		}
 	}
 	bbp.opts = bbpOptions
 	return nil
@@ -94,9 +111,10 @@ func (bbp *BuildBaronPlugin) GetPanelConfig() (*plugin.PanelConfig, error) {
 					template.HTML(`<script type="text/javascript" src="/plugin/buildbaron/static/js/task_build_baron.js"></script>`),
 				},
 				DataFunc: func(context plugin.UIContext) (interface{}, error) {
+					_, enabled := bbp.opts.Projects[context.ProjectRef.Identifier]
 					return struct {
 						Enabled bool `json:"enabled"`
-					}{util.SliceContains(bbp.opts.Projects, context.ProjectRef.Identifier)}, nil
+					}{enabled}, nil
 				},
 			},
 		},
@@ -123,7 +141,13 @@ func (bbp *BuildBaronPlugin) buildFailuresSearch(w http.ResponseWriter, r *http.
 		}
 	}
 
-	jql := taskToJQL(t)
+	bbProj, ok := bbp.opts.Projects[t.Project]
+	if !ok {
+		plugin.WriteJSON(w, http.StatusInternalServerError,
+			fmt.Sprintf("Corresponding JIRA project for %v not found", t.Project))
+		return
+	}
+	jql := taskToJQL(t, bbProj.TicketSearchProjects)
 	jiraHandler := thirdparty.NewJiraHandler(
 		bbp.opts.Host,
 		bbp.opts.Username,
@@ -203,11 +227,11 @@ type jqlSearcher interface {
 }
 
 // Generates a jira JQL string from the task
-// When we search in jira for a task we search in the BF package
+// When we search in jira for a task we search in the specified JIRA project
 // If there are any test results, then we only search by test file
 // name of all of the failed tests.
 // Otherwise we search by the task name.
-func taskToJQL(t *task.Task) string {
+func taskToJQL(t *task.Task, searchProjects []string) string {
 	var jqlParts []string
 	var jqlClause string
 	for _, testResult := range t.TestResults {
@@ -222,7 +246,7 @@ func taskToJQL(t *task.Task) string {
 		jqlClause = fmt.Sprintf("text~\"%v\"", t.DisplayName)
 	}
 
-	return fmt.Sprintf(JQLBFQuery, jqlClause)
+	return fmt.Sprintf(JQLBFQuery, strings.Join(searchProjects, ", "), jqlClause)
 }
 
 // Note contains arbitrary information entered by an Evergreen user, scope to a task.
