@@ -5,6 +5,7 @@ mciModule.controller('TaskBuildBaronCtrl', function($scope, $http, $window) {
     "Blocked": 1,
     "Open": 1,
     "In Progress": 1,
+    "Waiting for bug fix": 1,
     "Closed": 2,
     "Resolved": 2,
   };
