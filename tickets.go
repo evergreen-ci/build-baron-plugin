@@ -13,7 +13,7 @@ import (
 	"github.com/evergreen-ci/evergreen/model/task"
 	"github.com/evergreen-ci/evergreen/plugin"
 	"github.com/evergreen-ci/evergreen/thirdparty"
-	"github.com/tychoish/grip/slogger"
+	"github.com/mongodb/grip/slogger"
 )
 
 const FailingTasksField = "customfield_12950"

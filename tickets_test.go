@@ -1,9 +1,10 @@
 package buildbaron
 
 import (
+	"testing"
+
 	"github.com/evergreen-ci/evergreen/model/task"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestDescriptionGeneration(t *testing.T) {
