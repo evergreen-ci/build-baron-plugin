@@ -17,7 +17,7 @@ import (
 	"github.com/evergreen-ci/evergreen/util"
 	"github.com/gorilla/mux"
 	"github.com/mitchellh/mapstructure"
-	"github.com/mongodb/grip/slogger"
+	"github.com/mongodb/grip"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -157,7 +157,7 @@ func (bbp *BuildBaronPlugin) buildFailuresSearch(w http.ResponseWriter, r *http.
 	tickets, err := jiraHandler.JQLSearchAll(jql)
 	if err != nil {
 		message := fmt.Sprintf("%v: %v, %v", JIRAFailure, err, jql)
-		evergreen.Logger.Errorf(slogger.ERROR, message)
+		grip.Error(message)
 		plugin.WriteJSON(w, http.StatusInternalServerError, message)
 		return
 	}
