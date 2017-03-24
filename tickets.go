@@ -16,9 +16,10 @@ import (
 )
 
 const (
-	FailingTasksField   = "customfield_12950"
-	FailingVariantField = "customfield_14277"
-	UIRoot              = "https://evergreen.mongodb.com"
+	FailingTasksField     = "customfield_12950"
+	FailingVariantField   = "customfield_14277"
+	EvergreenProjectField = "customfield_14278"
+	UIRoot                = "https://evergreen.mongodb.com"
 )
 
 const DescriptionTemplateString = `
@@ -101,6 +102,7 @@ func (bbp *BuildBaronPlugin) fileTicket(w http.ResponseWriter, r *http.Request) 
 	request["summary"] = getSummary(t.DisplayName, tests)
 	request[FailingTasksField] = []string{t.DisplayName}
 	request[FailingVariantField] = []string{t.BuildVariant}
+	request[EvergreenProjectField] = []string{t.Project}
 	request["issuetype"] = map[string]string{"name": "Build Failure"}
 	request["assignee"] = map[string]string{"name": u.Id}
 	request["reporter"] = map[string]string{"name": u.Id}
