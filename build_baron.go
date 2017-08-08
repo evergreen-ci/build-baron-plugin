@@ -29,7 +29,7 @@ func init() {
 const (
 	PluginName  = "buildbaron"
 	JIRAFailure = "Error searching jira for ticket"
-	JQLBFQuery  = "(project in (%v)) and ( %v )"
+	JQLBFQuery  = "(project in (%v)) and ( %v ) order by updatedDate desc"
 
 	NotesCollection = "build_baron_notes"
 	msPerNS         = 1000 * 1000
@@ -154,7 +154,7 @@ func (bbp *BuildBaronPlugin) buildFailuresSearch(w http.ResponseWriter, r *http.
 		bbp.opts.Password,
 	)
 
-	tickets, err := jiraHandler.JQLSearchAll(jql)
+	tickets, err := jiraHandler.JQLSearch(jql, 0, -1)
 	if err != nil {
 		message := fmt.Sprintf("%v: %v, %v", JIRAFailure, err, jql)
 		grip.Error(message)
